@@ -51,7 +51,7 @@ dataset = ConnectivityData('./data_demo')
 
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=99)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-labels = np.genfromtxt(osp.join(dataset.raw_dir, 'labels.csv'))
+labels = np.genfromtxt(osp.join(dataset.raw_dir, 'Labels.csv'))
 eval_metrics = np.zeros((skf.n_splits, 3))
 
 for n_fold, (train, test) in enumerate(skf.split(labels, labels)):
