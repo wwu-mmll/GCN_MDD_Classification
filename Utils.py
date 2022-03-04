@@ -3,7 +3,7 @@ from scipy.spatial import distance
 from scipy.sparse import coo_matrix, csr
 
 
-def compute_KNN_graph(matrix, k_degree=10, metric='euclidean'):
+def compute_KNN_graph(matrix, k_degree=30, metric='euclidean'):
     """ Calculate the adjacency matrix from the connectivity matrix."""
 
     dist = distance.pdist(matrix, metric)
