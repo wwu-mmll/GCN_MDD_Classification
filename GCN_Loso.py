@@ -52,7 +52,7 @@ dataset = ConnectivityData('./data_demo')
 logo = LeaveOneGroupOut()
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 sites = np.genfromtxt(osp.join(dataset.raw_dir, 'sites.csv'))
-labels = np.genfromtxt(osp.join(dataset.raw_dir, 'labels.csv'))
+labels = np.genfromtxt(osp.join(dataset.raw_dir, 'Labels.csv'))
 n_sites = np.unique(sites).shape[0]
 eval_metrics = np.zeros((n_sites, 3))
 
