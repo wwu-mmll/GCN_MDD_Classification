@@ -1,11 +1,6 @@
 import numpy as np
-from functools import partial
 from scipy.spatial import distance
 from scipy.sparse import coo_matrix, csr
-
-import torch
-from torch_geometric.data import InMemoryDataset, Data
-from torch_geometric.utils import dense_to_sparse
 
 
 def compute_KNN_graph(matrix, k_degree=10, metric='euclidean'):
