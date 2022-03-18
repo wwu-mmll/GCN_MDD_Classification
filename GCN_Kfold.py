@@ -47,32 +47,45 @@ def GCN_test(loader):
     return epoch_sen, epoch_spe, epoch_acc
 
 
-dataset = ConnectivityData('./data_demo')
+dataset = ConnectivityData('./data')
 
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=99)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 labels = np.genfromtxt(osp.join(dataset.raw_dir, 'Labels.csv'))
 eval_metrics = np.zeros((skf.n_splits, 3))
 
-for n_fold, (train, test) in enumerate(skf.split(labels, labels)):
+for n_fold, (train_val, test) in enumerate(skf.split(labels, labels)):
 
     model = GCN(dataset.num_features, dataset.num_classes, 3).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
-    train_dataset, test_dataset = dataset[train.tolist()], dataset[test.tolist()]
+    train_val_dataset, test_dataset = dataset[train_val.tolist()], dataset[test.tolist()]
+    train_val_labels = labels[train_val]
+    train_val_index = np.arange(len(train_val_dataset))
 
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=True)
+    train, val, _, _ = train_test_split(train_val_index, train_val_labels, test_size=0.11, shuffle=True, stratify=train_val_labels)
+    train_dataset, val_dataset = train_val_dataset[train.tolist()], train_val_dataset[val.tolist()]
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=True)
 
+    min_v_loss = np.inf
     for epoch in range(50):
-        loss = GCN_train(train_loader)
-        _, _, train_acc, = GCN_test(train_loader)
-        test_sen, test_spe, test_acc = GCN_test(test_loader)
-        print('CV: {:03d}, Epoch: {:03d}, Loss: {:.5f}, Train ACC: {:.5f}, Test ACC: {:.5f}'
-              .format(n_fold + 1, epoch + 1, loss, train_acc, test_acc))
+        t_loss = GCN_train(train_loader)
+        val_sen, val_spe, val_bac, v_loss = GCN_test(val_loader)
+        test_sen, test_spe, test_bac, _ = GCN_test(test_loader)
 
-    eval_metrics[n_fold, 0] = test_sen
-    eval_metrics[n_fold, 1] = test_spe
-    eval_metrics[n_fold, 2] = test_acc
+        if min_v_loss > v_loss:
+            min_v_loss = v_loss
+            best_val_bac = val_bac
+            best_test_sen, best_test_spe, best_test_bac = test_sen, test_spe, test_bac
+            torch.save(model.state_dict(), 'best_model_%02i.pth' % (n_fold + 1))
+            print('CV: {:03d}, Epoch: {:03d}, Val Loss: {:.5f}, Val BAC: {:.5f}, Test BAC: {:.5f}, TEST SEN: {:.5f}, '
+                  'TEST SPE: {:.5f}'.format(n_fold + 1, epoch + 1, min_v_loss, best_val_bac, best_test_bac,
+                                            best_test_sen, best_test_spe))
+
+    eval_metrics[n_fold, 0] = best_test_sen
+    eval_metrics[n_fold, 1] = best_test_spe
+    eval_metrics[n_fold, 2] = best_test_acc
 
 eval_df = pd.DataFrame(eval_metrics)
 eval_df.columns = ['SEN', 'SPE', 'ACC']
