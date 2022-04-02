@@ -35,6 +35,7 @@ class ConnectivityData(InMemoryDataset):
         for filename, y in zip(self.raw_paths, labels):
             y = torch.tensor([y]).long()
             connectivity = np.genfromtxt(filename)
+            np.fill_diagonal(connectivity, 0)
             x = torch.from_numpy(connectivity).float()
 
             adj = compute_KNN_graph(connectivity)

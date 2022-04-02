@@ -4,8 +4,8 @@ import os.path as osp
 
 import torch
 import torch.nn.functional as func
-from torch_geometric.data import DataLoader
-from sklearn.model_selection import StratifiedKFold
+from torch_geometric.loader import DataLoader
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.metrics import confusion_matrix
 
 from Model import GCN
@@ -32,9 +32,12 @@ def GCN_test(loader):
 
     pred = []
     label = []
+    loss_all = 0
     for data in loader:
         data = data.to(device)
         output = model(data)
+        loss = func.cross_entropy(output, data.y)
+        loss_all += data.num_graphs * loss.item()
         pred.append(func.softmax(output, dim=1).max(dim=1)[1])
         label.append(data.y)
 
@@ -44,7 +47,7 @@ def GCN_test(loader):
     epoch_sen = tp / (tp + fn)
     epoch_spe = tn / (tn + fp)
     epoch_acc = (tn + tp) / (tn + tp + fn + fp)
-    return epoch_sen, epoch_spe, epoch_acc
+    return epoch_sen, epoch_spe, epoch_acc, loss_all / len(val_dataset)
 
 
 dataset = ConnectivityData('./data')
@@ -71,16 +74,16 @@ for n_fold, (train_val, test) in enumerate(skf.split(labels, labels)):
     min_v_loss = np.inf
     for epoch in range(50):
         t_loss = GCN_train(train_loader)
-        val_sen, val_spe, val_bac, v_loss = GCN_test(val_loader)
-        test_sen, test_spe, test_bac, _ = GCN_test(test_loader)
+        val_sen, val_spe, val_acc, v_loss = GCN_test(val_loader)
+        test_sen, test_spe, test_acc, _ = GCN_test(test_loader)
 
         if min_v_loss > v_loss:
             min_v_loss = v_loss
-            best_val_bac = val_bac
-            best_test_sen, best_test_spe, best_test_bac = test_sen, test_spe, test_bac
+            best_val_acc = val_acc
+            best_test_sen, best_test_spe, best_test_acc = test_sen, test_spe, test_acc
             torch.save(model.state_dict(), 'best_model_%02i.pth' % (n_fold + 1))
             print('CV: {:03d}, Epoch: {:03d}, Val Loss: {:.5f}, Val BAC: {:.5f}, Test BAC: {:.5f}, TEST SEN: {:.5f}, '
-                  'TEST SPE: {:.5f}'.format(n_fold + 1, epoch + 1, min_v_loss, best_val_bac, best_test_bac,
+                  'TEST SPE: {:.5f}'.format(n_fold + 1, epoch + 1, min_v_loss, best_val_acc, best_test_acc,
                                             best_test_sen, best_test_spe))
 
     eval_metrics[n_fold, 0] = best_test_sen
