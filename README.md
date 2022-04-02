@@ -1,6 +1,6 @@
 # GCN_MDD_Classification
 
-This repository provides core codes and toolboxes for GCN model in the paper entitled "Using graph convolutional network to characterize individuals with major depressive disorder across multiple imaging sites" by [Qin et al., 2022]. Please see the paper for the detailed description.
+This repository provides core codes and toolboxes for GCN model in the paper entitled "Using graph convolutional network to characterize individuals with major depressive disorder across multiple imaging sites" by [Qin et al., 2022](https://www.thelancet.com/journals/ebiom/article/PIIS2352-3964(22)00161-X/fulltext). Please see the paper for the detailed description.
 
 # Overview
 Content includes source code for the implementation of graph convolutional network (GCN) on a large multi-site MDD fMRI dataset. All custom codes were tested on Linux Ubuntu 20.04 LTS PC.
