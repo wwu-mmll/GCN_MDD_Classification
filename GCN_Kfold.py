@@ -50,7 +50,7 @@ def GCN_test(loader):
     return epoch_sen, epoch_spe, epoch_acc, loss_all / len(val_dataset)
 
 
-dataset = ConnectivityData('./data')
+dataset = ConnectivityData('/spm-data/Scratch/spielwiese_nils_winter/graph_net/results/gcn_data')
 
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=99)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -77,7 +77,7 @@ for n_fold, (train_val, test) in enumerate(skf.split(labels, labels)):
         val_sen, val_spe, val_acc, v_loss = GCN_test(val_loader)
         test_sen, test_spe, test_acc, _ = GCN_test(test_loader)
 
-        if min_v_loss > v_loss:
+        if epoch % 10 == 0:
             min_v_loss = v_loss
             best_val_acc = val_acc
             best_test_sen, best_test_spe, best_test_acc = test_sen, test_spe, test_acc
