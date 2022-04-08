@@ -50,7 +50,11 @@ def GCN_test(loader):
     return epoch_sen, epoch_spe, epoch_acc, loss_all / len(val_dataset)
 
 
-dataset = ConnectivityData('/spm-data/Scratch/spielwiese_nils_winter/graph_net/results/gcn_data')
+sample_filter = "filter_hc_mdd_acute"
+#sample_filter = "filter_hc_mdd"
+
+dataset = ConnectivityData(osp.join('/spm-data/Scratch/spielwiese_nils_winter/graph_net/results/gcn_data',
+                                    sample_filter))
 
 skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=99)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
